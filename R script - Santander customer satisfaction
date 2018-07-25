@@ -230,7 +230,7 @@ summary(gbm1,n.trees=best.iter) # based on the estimated best number of trees
 ######################################################################################################################
 ##1.19 Prediction 
 
-# f.predict will be on the canonical scale (logit,log,etc.)
+# f.predict on canonical scale (logit,log,etc.)
 f.predict <- predict.gbm(gbm1, test, n.trees = best.iter, type='link')
 head(f.predict)
 str(f.predict)
