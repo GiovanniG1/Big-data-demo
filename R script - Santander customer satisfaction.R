@@ -16,7 +16,7 @@
 #2.1 Auto modelling
 #2.2 Imputation
 #2.3 Hyper-parameter tuning
-#2.4 Optimized predictive model GBM bernoulli
+#2.4 Optimized predictive model GBM 
 #2.5 Prediction
 
 #3 Prediction 3
