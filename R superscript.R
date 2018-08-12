@@ -1,7 +1,7 @@
 
 #Table of content
 
-#1 Spark
+#1 Spark R
 #1.1 Load libraries 
 #1.2 Spark connection setup 
 #1.3 Configuring connections 
