@@ -1,0 +1,411 @@
+
+/*
+* Table of content
+*
+* 1 Spark Scala
+* 1.1 Import modules/packages
+* 1.2 Dependencies
+* 1.3 Spark-shell RDD 1 
+* 1.4 Spark-shell RDD 2 
+* 1.5 Spark-shell RDD 3 
+* 1.6 Spark connection setup 1
+* 1.7 Spark connection setup 2
+* 1.8 DF basics 1
+* 1.9 DF basics 2
+* 1.10 DF basics 3
+* 1.11 Machine learning 1 
+* 1.12 Spark streaming 1
+*
+*/
+
+/**************************************************************************/
+/**************************************************************************/
+// 1.1 Import modules/packages
+
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.Row
+import org.apache.spark.mllib.classification.SVMWithSGD
+import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.SparkConf
+import org.apache.spark._
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.StreamingContext._ 
+import org.apache.spark.SparkConf
+import org.apache.spark.ml.linalg.{Matrix, Vectors}
+import org.apache.spark.ml.stat.Correlation
+import org.apache.spark.sql.Row
+import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.feature.Word2Vec
+import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.sql.Row
+import org.apache.spark.ml.feature.FeatureHasher
+import org.apache.spark.ml.feature.{RegexTokenizer, Tokenizer}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.classification.DecisionTreeClassificationModel
+import org.apache.spark.ml.classification.DecisionTreeClassifier
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.2 Dependencies
+ 
+ <dependencies>
+  <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-mllib -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-mllib_2.11</artifactId>
+    <version>2.3.1</version>
+    <scope>runtime</scope>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-graphx -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-graphx_2.11</artifactId>
+    <version>2.3.1</version>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/io.socket/socket.io-client -->
+<dependency>
+    <groupId>io.socket</groupId>
+    <artifactId>socket.io-client</artifactId>
+    <version>1.0.0</version>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-streaming -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-streaming_2.11</artifactId>
+    <version>2.3.1</version>
+    <scope>provided</scope>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/com.univocity/univocity-parsers -->
+<dependency>
+    <groupId>com.univocity</groupId>
+    <artifactId>univocity-parsers</artifactId>
+    <version>2.7.5</version>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/com.databricks/spark-csv -->
+<dependency>
+    <groupId>com.databricks</groupId>
+    <artifactId>spark-csv_2.11</artifactId>
+    <version>1.5.0</version>
+</dependency>
+  <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-core_2.11</artifactId>
+    <version>2.3.1</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-sql_2.11</artifactId>
+    <version>2.3.1</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.spark/spark-hive -->
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-hive_2.11</artifactId>
+    <version>2.3.1</version>
+    <scope>provided</scope>
+</dependency>
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.3 Spark shell RDD 1
+
+val intArray = Array(1,0,1,0,1,0)
+
+val intRDD = sc.parallelize(intArray)
+
+intRDD.first()
+
+intRDD.take(3)
+
+intRDD.collect()
+
+intRDD.collect().foreach(println)
+
+intRDD.partitions.size
+
+val intList = List(1,0,1,0,1,0)
+
+val listRDD = sc.parallelize(intList)
+
+val intListRDD = sc.parallelize(intList, 6)
+
+intListRDD.partitions.size
+
+listRDD.partitions.size
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.4 Spark shell RDD 2
+
+val fileRDD = sc.textFile(“C:/big-datademo/superscripts/data/people.csv”)
+
+fileRDD.first()
+
+fileRDD.take(10)
+
+fileRDD.take(10).foreach(println)
+
+fileRDD.partitions.size
+
+val fileRDDPartitioned = sc.textFile("C:/big-datademo/superscripts/data/people.csv")
+
+val data = sc.textFile("C:/big-datademo/superscripts/data/people.csv", 10)
+
+data.partitions.size
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.5 Spark shell RDD 3
+
+val data = Array(
+     | "Hi",
+     | "This is the Scala superscript",
+     | "My name is Giovanni",
+     | "Let's proceed",
+     | "Let's go !")
+
+val dataRDD = sc.parallelize(data)
+
+val filterRDD = dataRDD.filter(line => line.length > 15)
+
+filterRDD.collect()
+
+filterRDD.collect.foreach(println)
+
+val mapRDD = dataRDD.map(line => line.split(" "))
+
+mapRDD.collect()
+
+val flatMapRDD = dataRDD.flatMap(line => line.split(" "))
+
+flatMapRDD.collect()
+
+val numArray = Array(1,2,2,3,4,5,5,1,6,7)
+
+val numRDD = sc.parallelize(numArray)
+
+val distinctElementsRDD = numRDD.distinct()
+
+distinctElementsRDD.collect()
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.6 Spark connection setup 1 
+
+object CreatingSparkContext {
+  def main(args: Array[String]): Unit = {
+    val sparkConf = new SparkConf()
+    sparkConf.setAppName("Spark Application")
+    sparkConf.setMaster("local")
+    
+    val sc = new SparkContext(sparkConf)
+    
+    val array = Array(1,0,1,0,1,0,1,0,1,0)
+    
+    val arrayRDD = sc.parallelize(array, 1)
+    
+    println("Num of elements in RDD: ", arrayRDD.count())
+    arrayRDD.foreach(println)  
+    
+    val file = "C:/big-datademo/superscripts/R/data/SantanderCS.csv"
+    val fileRDD = sc.textFile(file, 5)
+    println("Num of rows in file:", fileRDD.count())
+    println(fileRDD.first()) 
+  }
+}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.7 Spark connection setup 2
+
+object CreatingSparkContextWithSparksession {
+  def main(args: Array[String]): Unit = {
+    
+    val sparkSession = SparkSession.builder()
+    .appName("Creating Spark Context with Spark Session")
+    .master("local")
+    .getOrCreate()
+    
+    val array = Array(1,2,3,4,5)
+    
+    val arrayRDD = sparkSession.sparkContext.parallelize(array, 1)
+    
+    arrayRDD.foreach(println)
+    
+    val file = "C:/big-datademo/superscripts/R/data/SantanderCS.csv"
+    val fileRDD = sparkSession.sparkContext.textFile(file)
+    
+    println("Number of records: " , fileRDD.count())
+    fileRDD.take(10).foreach(println)
+  
+  }
+}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.8 DF basics 1
+
+object DFbasics {
+  def main(args: Array[String]): Unit = {
+    val sparkConf = new SparkConf()
+    .setMaster("local")
+    .setAppName("Creating DF with Spark Context")
+    
+    val sc = new SparkContext(sparkConf) 
+  
+    val sqlContext = new SQLContext(sc)
+    
+    val rdd = sc.parallelize(Array(1,2,3,4,5))
+    
+    val schema = StructType(
+        StructField("Numbers", IntegerType, false) :: Nil
+    
+     )
+     
+     val rowRDD = rdd.map(line => Row(line))
+     
+     val df = sqlContext.createDataFrame(rowRDD, schema)
+     
+     df.printSchema()
+     
+     df.show()
+  } 
+}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.9 DF basics 2
+
+object DFbasics2 {
+  def main(args:Array[String]): Unit ={
+    val spark = SparkSession.builder()
+    .appName("Creating a DF using Spark Session")
+    .master("local")
+    .getOrCreate()
+    
+    val rdd = spark.sparkContext.parallelize(Array("1","2","3","4","5"))
+    
+    val schema = StructType(
+        StructField("Integers as String", StringType, true) :: Nil
+        )
+        
+        val rowRDD = rdd.map(element => Row(element))
+        
+        val df = spark.createDataFrame(rowRDD, schema)
+        
+        df.printSchema()
+        
+        df.show(3)    
+  
+  }
+ }
+ 
+/********************************************************************************/
+/********************************************************************************/
+// 1.10 DF basics 3
+
+object DFbasics3 {
+  def main(args: Array[String]): Unit = {
+    val sparkConf = new SparkConf()
+    .setMaster("local")
+    .setAppName("Creating Dataframe from CSV file using Spark 1x procedure")
+    
+    val sc = new SparkContext(sparkConf)
+    
+    val sqlContext = new SQLContext(sc)
+    
+    val df = sqlContext.read
+       .option("header","true")
+       .option("inferSchema", "true")
+       .format("com.databricks.spark.csv")
+       .load("C:/big-datademo/superscripts/R/data/SantanderCS.csv")
+       
+       df.printSchema()
+       
+       df.show(3)    
+  }
+  
+}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.11 Machine learning 1 
+
+object MachineLearning {
+  def main(args: Array[String]): Unit = {
+    val sparkConf = new SparkConf()
+    .setMaster("local")
+    .setAppName("Mlib")
+    
+     val sc = new SparkContext(sparkConf)
+    
+    val sqlContext = new SQLContext(sc)
+  
+// Loading and parsing the data 
+val data = sc.textFile("C:/big-datademo/superscripts/data/svmdata.txt")
+val parsedData = data.map { line =>
+  val parts = line.split(' ')
+  LabeledPoint(parts(0).toDouble, parts.tail.map(x => x.toDouble).toArray)
+}
+
+// Runing a training algorithm and build the model
+val numIterations = 20
+val model = SVMWithSGD.train(parsedData, numIterations)
+
+// Evaluating model on training examples and compute training error
+val labelAndPreds = parsedData.map { point =>
+  val prediction = model.predict(point.features)
+  (point.label, prediction)
+}
+val trainErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / parsedData.count
+println("Training Error = " + trainErr)
+
+  }
+  
+}
+
+/********************************************************************************/
+/********************************************************************************/
+// 1.12 Spark streaming 1
+
+object sparkstreaming {
+    def main(args: Array[String]): Unit = {
+ 
+  // Creating a local StreamingContext with two working thread. Batch interval = 1 second
+// The master requires 2 cores to prevent a starvation scenario.
+
+val conf = new SparkConf().setMaster("local[2]").setAppName("NetworkWordCount")
+val ssc = new StreamingContext(conf, Seconds(1))
+
+// Creating a DStream and connect to hostname:port, like localhost:2412
+val lines = ssc.socketTextStream("localhost", 2412)
+
+// Splitting each line into words
+val words = lines.flatMap(_.split(" "))
+
+// Counting each word in each batch
+val pairs = words.map(word => (word, 1))
+val wordCounts = pairs.reduceByKey(_ + _)
+
+// Printing the first ten elements of each RDD generated in the DStream to the console
+wordCounts.print()
+
+ssc.start()           
+ssc.awaitTermination() 
+
+    }
+}
